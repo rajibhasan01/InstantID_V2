@@ -11,8 +11,8 @@ from diffusers.utils import load_image
 from insightface.app import FaceAnalysis
 from PIL import Image
 
-from pipeline_stable_diffusion_xl_instantid import StableDiffusionXLInstantIDPipeline
-from style_template import styles
+from instant_photo_maker.pipeline_stable_diffusion_xl_instantid import StableDiffusionXLInstantIDPipeline
+from instant_photo_maker.style_template import styles
 
 # global variable
 MAX_SEED = np.iinfo(np.int32).max
@@ -21,12 +21,12 @@ STYLE_NAMES = list(styles.keys())
 DEFAULT_STYLE_NAME = "Vibrant Color"
 
 # Load face encoder
-app = FaceAnalysis(name="antelopev2", root="./", providers=["CPUExecutionProvider"])
+app = FaceAnalysis(name="antelopev2", root="./instant_photo_maker/", providers=["CPUExecutionProvider"])
 app.prepare(ctx_id=0, det_size=(640, 640))
 
 # Path to InstantID models
-face_adapter = "./checkpoints/ip-adapter.bin"
-controlnet_path = "./checkpoints/ControlNetModel"
+face_adapter = "./instant_photo_maker/checkpoints/ip-adapter.bin"
+controlnet_path = "./instant_photo_maker/checkpoints/ControlNetModel"
 
 # Load pipeline
 controlnet = ControlNetModel.from_pretrained(controlnet_path, torch_dtype=torch.float16)
@@ -150,7 +150,6 @@ def generate_image(
     adapter_strength_ratio,
     guidance_scale,
     seed,
-    img_name
 ):
     if prompt is None:
         prompt = "A photo of a pirates"
@@ -221,29 +220,4 @@ def generate_image(
         generator=generator,
     ).images
 
-    return images[0].save(img_name)
-
-
-face_image_path = "/home/webrnd/Desktop/development/production/InstantID/InstantID/images/razib1.jpg"
-pose_image_path = None
-
-prompt = "A photo of a pirates"
-negative_prompt = "(lowres, low quality, worst quality:1.2), (text:1.2), watermark, (frame:1.2), deformed, ugly, deformed eyes, blur, out of focus, blurry, deformed cat, deformed, nudity,naked, bikini, skimpy, scanty, bare skin, lingerie, swimsuit, exposed, see-through, photo, anthropomorphic cat, monochrome, pet collar, gun, weapon, blue, 3d, drones, drone, buildings in background, green"
-output_count = 4
-seed = 1104730247
-
-for i in range(4):
-    seed = seed + i
-    generate_image(
-        face_image_path=face_image_path,
-        pose_image_path=pose_image_path,
-        prompt=prompt,
-        negative_prompt=negative_prompt,
-        style_name="Vibrant Color",
-        enhance_face_region=True,
-        num_steps=30,
-        identitynet_strength_ratio=0.80,
-        adapter_strength_ratio=0.90,
-        guidance_scale=5,
-        seed=seed,
-        img_name=f'output_{i}.jpg')
+    return images[0]
